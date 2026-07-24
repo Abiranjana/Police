@@ -1,0 +1,27 @@
+{
+  "decision": {
+    "allow": true,
+    "decision_version": "M7-STUB-v1",
+    "stub": true,
+    "role": "SI",
+    "intent": "TREND_BY_TIME",
+    "scope_rule": "OWN_UNIT",
+    "scope_predicate": {
+      "field": "unit_id",
+      "operator": "IN",
+      "values": [4430006]
+    },
+    "field_policy": "FULL",
+    "min_cell_size": 1,
+    "max_rows": 500,
+    "reason_code": "STUB_TREND_ALLOWED"
+  },
+  "identity": {
+    "user_id": "demo-si",
+    "role": "SI",
+    "unit_ids": [4430006],
+    "district_ids": [443],
+    "field_policy": "FULL",
+    "min_cell_size": 1
+  }
+}
