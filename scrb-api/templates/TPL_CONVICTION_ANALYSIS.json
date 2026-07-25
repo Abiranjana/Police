@@ -1,0 +1,111 @@
+{
+  "id": "TPL_CONVICTION_ANALYSIS",
+  "version": "1.0.0",
+  "intent": "CONVICTION_ANALYSIS",
+  "tier": "B",
+  "deprecated": false,
+  "author": "P2",
+  "reviewer": "P1",
+  "reviewed": "2026-07-25",
+  "purpose": "Conviction rate by unit for a sub-head in a year (AVG on a boolean).",
+  "tables_declared": [
+    "si_case_fact"
+  ],
+  "params": {
+    "crime_subhead_id": {
+      "type": "int",
+      "required": true,
+      "min": 1,
+      "max": 9999,
+      "description": "Specific offence sub-head."
+    },
+    "year_num": {
+      "type": "year",
+      "required": true,
+      "min": 2019,
+      "max": 2026,
+      "description": "Single year, from IncidentFromDate."
+    }
+  },
+  "scope": {
+    "column": "unit_id",
+    "conditions_consumed": 1,
+    "exempt": false
+  },
+  "where_budget": {
+    "template_conditions": 2,
+    "ceiling": 5
+  },
+  "body": "SELECT unit_id, AVG(is_convicted) FROM si_case_fact WHERE crime_subhead_id = {{crime_subhead_id}} AND year_num = {{year_num}} AND {{SCOPE_PREDICATE}} GROUP BY unit_id ORDER BY AVG(is_convicted) DESC",
+  "execute_on": "OLAP",
+  "result": {
+    "columns": [
+      {
+        "name": "unit_id",
+        "source_key": "unit_id",
+        "type": "int"
+      },
+      {
+        "name": "rate",
+        "source_key": "AVG(is_convicted)",
+        "type": "float"
+      }
+    ],
+    "max_rows": 50,
+    "paginate": false,
+    "visual_type": "BAR_CATEGORY",
+    "min_cell_size_applies": true
+  },
+  "fixtures": [
+    {
+      "name": "conviction chain snatching",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006,
+        4430007,
+        4430011
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 50,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "single",
+      "params": {
+        "crime_subhead_id": 45,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 50,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "empty",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2019
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    }
+  ],
+  "limitations": [
+    "Conviction is a court outcome that lags registration by months to years; recent-year rates are structurally low and must be read with that lag in mind."
+  ]
+}

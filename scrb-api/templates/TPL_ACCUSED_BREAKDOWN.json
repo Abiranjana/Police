@@ -1,0 +1,112 @@
+{
+  "id": "TPL_ACCUSED_BREAKDOWN",
+  "version": "1.0.0",
+  "intent": "ACCUSED_BREAKDOWN",
+  "tier": "A",
+  "deprecated": false,
+  "author": "P2",
+  "reviewer": "P1",
+  "reviewed": "2026-07-25",
+  "purpose": "Accused age-band breakdown for a crime sub-head in a year, within jurisdiction.",
+  "tables_declared": [
+    "si_case_fact"
+  ],
+  "params": {
+    "crime_subhead_id": {
+      "type": "int",
+      "required": true,
+      "min": 1,
+      "max": 9999,
+      "description": "Specific offence."
+    },
+    "year_num": {
+      "type": "year",
+      "required": true,
+      "min": 2019,
+      "max": 2026,
+      "description": "Single year."
+    }
+  },
+  "scope": {
+    "column": "unit_id",
+    "conditions_consumed": 1,
+    "exempt": false
+  },
+  "where_budget": {
+    "template_conditions": 2,
+    "ceiling": 5
+  },
+  "body": "SELECT accused_age_band, COUNT(case_id) FROM si_case_fact WHERE crime_subhead_id = {{crime_subhead_id}} AND year_num = {{year_num}} AND {{SCOPE_PREDICATE}} GROUP BY accused_age_band ORDER BY accused_age_band",
+  "execute_on": "OLAP",
+  "result": {
+    "columns": [
+      {
+        "name": "accused_age_band",
+        "source_key": "accused_age_band",
+        "type": "int"
+      },
+      {
+        "name": "count",
+        "source_key": "COUNT(case_id)",
+        "type": "int"
+      }
+    ],
+    "max_rows": 10,
+    "paginate": false,
+    "visual_type": "BAR_CATEGORY",
+    "min_cell_size_applies": true
+  },
+  "fixtures": [
+    {
+      "name": "accused age chain snatching",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006,
+        4430007,
+        4430011
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 10,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "single unit",
+      "params": {
+        "crime_subhead_id": 78,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 10,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "edge empty",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2019
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    }
+  ],
+  "limitations": [
+    "Age bands: 0=<18, 1=18-29, 2=30-44, 3=45-59, 4=60+. Derived at generation time.",
+    "Band 0 (minors) is especially sensitive; small-cell suppression applies."
+  ]
+}

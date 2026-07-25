@@ -1,0 +1,216 @@
+{
+  "turn_id": "trn_01J9K4M2QX7B",
+  "conversation_id": "cnv_01J9K4M0PP31",
+  "outcome": "ANSWERED",
+  "answer": {
+    "summary": "Chain snatching in your station rose 41% in 2025, concentrated on Friday and Saturday between 19:00 and 22:00.",
+    "reasoning": "Based on 312 registered cases, using incident time rather than registration time. The Friday-Saturday evening concentration accounts for 38% of all cases against an expected 12% if incidents were evenly distributed. This describes registered cases and does not distinguish a change in offending from a change in reporting.",
+    "visual": {
+      "type": "HEATMAP_DAY_HOUR",
+      "spec": {
+        "x": {
+          "field": "hour_of_day",
+          "label": "Hour",
+          "domain": [
+            0,
+            23
+          ]
+        },
+        "y": {
+          "field": "day_of_week",
+          "label": "Day",
+          "domain": [
+            1,
+            7
+          ],
+          "tick_labels": [
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat",
+            "Sun"
+          ]
+        },
+        "value": {
+          "field": "count",
+          "label": "Cases"
+        },
+        "cells": [
+          {
+            "day_of_week": 5,
+            "hour_of_day": 19,
+            "count": 14
+          },
+          {
+            "day_of_week": 5,
+            "hour_of_day": 20,
+            "count": 19
+          },
+          {
+            "day_of_week": 5,
+            "hour_of_day": 21,
+            "count": 22
+          },
+          {
+            "day_of_week": 5,
+            "hour_of_day": 22,
+            "count": 11
+          },
+          {
+            "day_of_week": 6,
+            "hour_of_day": 19,
+            "count": 12
+          },
+          {
+            "day_of_week": 6,
+            "hour_of_day": 20,
+            "count": 17
+          },
+          {
+            "day_of_week": 6,
+            "hour_of_day": 21,
+            "count": 20
+          },
+          {
+            "day_of_week": 6,
+            "hour_of_day": 22,
+            "count": 9
+          },
+          {
+            "day_of_week": 1,
+            "hour_of_day": 20,
+            "count": 3
+          },
+          {
+            "day_of_week": 2,
+            "hour_of_day": 20,
+            "count": 2
+          },
+          {
+            "day_of_week": 3,
+            "hour_of_day": 20,
+            "count": 4
+          },
+          {
+            "day_of_week": 4,
+            "hour_of_day": 20,
+            "count": 3
+          },
+          {
+            "day_of_week": 7,
+            "hour_of_day": 20,
+            "count": 5
+          }
+        ]
+      }
+    },
+    "table": {
+      "columns": [
+        "day",
+        "hour",
+        "count"
+      ],
+      "rows": [
+        [
+          "Fri",
+          21,
+          22
+        ],
+        [
+          "Sat",
+          21,
+          20
+        ],
+        [
+          "Fri",
+          20,
+          19
+        ],
+        [
+          "Sat",
+          20,
+          17
+        ],
+        [
+          "Fri",
+          19,
+          14
+        ]
+      ],
+      "truncated": false,
+      "total_rows": 168
+    }
+  },
+  "evidence": {
+    "question": {
+      "raw": "chain snatchings in my station this year by day and hour",
+      "language": "en",
+      "via": "TEXT"
+    },
+    "intent": {
+      "value": "TREND_BY_TIME",
+      "confidence": 0.94
+    },
+    "entities": [
+      {
+        "slot": "crime_subhead_id",
+        "value": 12,
+        "label": "Chain snatching",
+        "source": "STATED"
+      },
+      {
+        "slot": "unit_id",
+        "value": 4430006,
+        "label": "Bengaluru North",
+        "source": "INHERITED_FROM_SESSION"
+      },
+      {
+        "slot": "year_num",
+        "value": 2025,
+        "label": "2025",
+        "source": "DERIVED"
+      }
+    ],
+    "permission": {
+      "role": "SI",
+      "scope_rule": "OWN_UNIT",
+      "field_policy": "FULL",
+      "min_cell_size": 1,
+      "narrowed": false,
+      "rule_id": 27
+    },
+    "template": {
+      "id": "TPL_TREND_TIME_DAYHOUR",
+      "version": "1.0.0",
+      "author": "P2",
+      "reviewer": "P1",
+      "reviewed": "2026-07-24"
+    },
+    "zcql": "SELECT day_of_week, hour_of_day, COUNT(case_id) FROM si_case_fact WHERE crime_subhead_id = 12 AND year_num = 2025 AND unit_id IN (4430006) GROUP BY day_of_week, hour_of_day ORDER BY day_of_week, hour_of_day",
+    "tables_used": [
+      "si_case_fact"
+    ],
+    "source": "OLAP",
+    "rows_returned": 168,
+    "rows_suppressed": 0,
+    "pages_fetched": 1,
+    "execution_ms": {
+      "route": 610,
+      "permission": 4,
+      "query": 380,
+      "analytics": 55,
+      "summarise": 890,
+      "total": 1939
+    },
+    "confidence": {
+      "intent": 0.94,
+      "analytical": "HIGH"
+    },
+    "data_as_of": "2026-07-24T02:15:00+05:30",
+    "warnings": []
+  },
+  "error": null,
+  "audit_id": "aud_01J9K4M2QX7C"
+}

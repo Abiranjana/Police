@@ -1,0 +1,111 @@
+{
+  "id": "TPL_COUNT_BY_AREA",
+  "version": "1.0.0",
+  "intent": "COUNT_BY_AREA",
+  "tier": "A",
+  "deprecated": false,
+  "author": "P2",
+  "reviewer": "P1",
+  "reviewed": "2026-07-25",
+  "purpose": "Count registered cases of one crime sub-head in one year, grouped by police unit, within the caller's jurisdiction.",
+  "tables_declared": [
+    "si_case_fact"
+  ],
+  "params": {
+    "crime_subhead_id": {
+      "type": "int",
+      "required": true,
+      "min": 1,
+      "max": 9999,
+      "description": "The specific offence."
+    },
+    "year_num": {
+      "type": "year",
+      "required": true,
+      "min": 2019,
+      "max": 2026,
+      "description": "Single year, from IncidentFromDate."
+    }
+  },
+  "scope": {
+    "column": "unit_id",
+    "conditions_consumed": 1,
+    "exempt": false
+  },
+  "where_budget": {
+    "template_conditions": 2,
+    "ceiling": 5
+  },
+  "body": "SELECT unit_id, COUNT(case_id) FROM si_case_fact WHERE crime_subhead_id = {{crime_subhead_id}} AND year_num = {{year_num}} AND {{SCOPE_PREDICATE}} GROUP BY unit_id ORDER BY COUNT(case_id) DESC",
+  "execute_on": "OLAP",
+  "result": {
+    "columns": [
+      {
+        "name": "unit_id",
+        "source_key": "unit_id",
+        "type": "int"
+      },
+      {
+        "name": "count",
+        "source_key": "COUNT(case_id)",
+        "type": "int"
+      }
+    ],
+    "max_rows": 50,
+    "paginate": false,
+    "visual_type": "BAR_CATEGORY",
+    "min_cell_size_applies": true
+  },
+  "fixtures": [
+    {
+      "name": "chain snatching by unit, 2024",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006,
+        4430007,
+        4430011
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 50,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "single unit scope",
+      "params": {
+        "crime_subhead_id": 45,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 50,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "edge \u2014 empty year",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2019
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    }
+  ],
+  "limitations": [
+    "Counts registered cases per unit; a higher count may reflect a larger or busier station, not more crime per capita."
+  ]
+}

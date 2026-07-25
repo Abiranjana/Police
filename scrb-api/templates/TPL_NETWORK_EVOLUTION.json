@@ -1,0 +1,93 @@
+{
+  "id": "TPL_NETWORK_EVOLUTION",
+  "version": "0.1.0",
+  "intent": "NETWORK_EVOLUTION",
+  "tier": "B",
+  "deprecated": false,
+  "author": "P2",
+  "reviewer": null,
+  "reviewed": null,
+  "purpose": "How a network changed between two time snapshots.",
+  "tables_declared": [
+    "si_network_snapshot"
+  ],
+  "definition_only": true,
+  "requires_service": "Module C periodic network snapshots (si_network_snapshot), not yet built.",
+  "params": {
+    "crime_subhead_id": {
+      "type": "int",
+      "required": false,
+      "min": 1,
+      "max": 9999,
+      "description": "Optional filter."
+    },
+    "year_num": {
+      "type": "year",
+      "required": false,
+      "min": 2019,
+      "max": 2026,
+      "description": "Optional filter."
+    }
+  },
+  "scope": {
+    "column": "unit_id",
+    "conditions_consumed": 1,
+    "exempt": false
+  },
+  "where_budget": {
+    "template_conditions": 2,
+    "ceiling": 5
+  },
+  "body": "-- DEFINITION ONLY. Executor returns E_SERVICE_UNAVAILABLE until dependency ships.\n-- Intended shape:\nSELECT ... FROM si_network_snapshot WHERE {{SCOPE_PREDICATE}} -- requires: Module C periodic network snapshots (si_network_snapshot), not yet built.",
+  "execute_on": "OLAP",
+  "result": {
+    "columns": [],
+    "max_rows": 0,
+    "paginate": false,
+    "visual_type": "NETWORK_GRAPH",
+    "min_cell_size_applies": true
+  },
+  "fixtures": [
+    {
+      "name": "stub A",
+      "params": {},
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "stub B",
+      "params": {},
+      "scope_values": [
+        4430006,
+        4430007
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "stub C",
+      "params": {},
+      "scope_values": [
+        4430011
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    }
+  ],
+  "limitations": [
+    "DEFINITION ONLY at submission. Requires: Module C periodic network snapshots (si_network_snapshot), not yet built.",
+    "Registered so the intent catalogue is complete and the interface is fixed; returns an honest E_SERVICE_UNAVAILABLE rather than fabricated data."
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "id": "TPL_SEASONAL_PATTERN",
+  "version": "1.0.0",
+  "intent": "SEASONAL_PATTERN",
+  "tier": "B",
+  "deprecated": false,
+  "author": "P2",
+  "reviewer": "P1",
+  "reviewed": "2026-07-25",
+  "purpose": "Case counts by quarter/season for a sub-head in a year, within jurisdiction.",
+  "tables_declared": [
+    "si_case_fact"
+  ],
+  "params": {
+    "crime_subhead_id": {
+      "type": "int",
+      "required": true,
+      "min": 1,
+      "max": 9999,
+      "description": "Specific offence sub-head."
+    },
+    "year_num": {
+      "type": "year",
+      "required": true,
+      "min": 2019,
+      "max": 2026,
+      "description": "Single year, from IncidentFromDate."
+    }
+  },
+  "scope": {
+    "column": "unit_id",
+    "conditions_consumed": 1,
+    "exempt": false
+  },
+  "where_budget": {
+    "template_conditions": 2,
+    "ceiling": 5
+  },
+  "body": "SELECT season, COUNT(case_id) FROM si_case_fact WHERE crime_subhead_id = {{crime_subhead_id}} AND year_num = {{year_num}} AND {{SCOPE_PREDICATE}} GROUP BY season ORDER BY season",
+  "execute_on": "OLAP",
+  "result": {
+    "columns": [
+      {
+        "name": "season",
+        "source_key": "season",
+        "type": "int"
+      },
+      {
+        "name": "count",
+        "source_key": "COUNT(case_id)",
+        "type": "int"
+      }
+    ],
+    "max_rows": 4,
+    "paginate": false,
+    "visual_type": "BAR_CATEGORY",
+    "min_cell_size_applies": false
+  },
+  "fixtures": [
+    {
+      "name": "season chain snatching",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 4,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "multi",
+      "params": {
+        "crime_subhead_id": 45,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006,
+        4430007
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 4,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "empty",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2019
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    }
+  ],
+  "limitations": [
+    "Season is a quarter proxy (0=Jan-Mar..3=Oct-Dec). One year alone can't establish a recurring seasonal pattern; multi-year needed for a real claim."
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "id": "TPL_SIMILAR_CASES",
+  "version": "0.1.0",
+  "intent": "SIMILAR_CASES",
+  "tier": "B",
+  "deprecated": false,
+  "author": "P2",
+  "reviewer": null,
+  "reviewed": null,
+  "purpose": "Cases most similar to a given case (MO similarity).",
+  "tables_declared": [
+    "si_case_embedding"
+  ],
+  "definition_only": true,
+  "requires_service": "QuickML similarity endpoint over si_case_embedding.",
+  "params": {
+    "crime_subhead_id": {
+      "type": "int",
+      "required": false,
+      "min": 1,
+      "max": 9999,
+      "description": "Optional filter."
+    },
+    "year_num": {
+      "type": "year",
+      "required": false,
+      "min": 2019,
+      "max": 2026,
+      "description": "Optional filter."
+    }
+  },
+  "scope": {
+    "column": "unit_id",
+    "conditions_consumed": 1,
+    "exempt": false
+  },
+  "where_budget": {
+    "template_conditions": 2,
+    "ceiling": 5
+  },
+  "body": "-- DEFINITION ONLY. Executor returns E_SERVICE_UNAVAILABLE until dependency ships.\n-- Intended shape:\nSELECT ... FROM si_case_embedding WHERE {{SCOPE_PREDICATE}} -- requires: QuickML similarity endpoint over si_case_embedding.",
+  "execute_on": "OLAP",
+  "result": {
+    "columns": [],
+    "max_rows": 0,
+    "paginate": false,
+    "visual_type": "TABLE_ONLY",
+    "min_cell_size_applies": true
+  },
+  "fixtures": [
+    {
+      "name": "stub A",
+      "params": {},
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "stub B",
+      "params": {},
+      "scope_values": [
+        4430006,
+        4430007
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "stub C",
+      "params": {},
+      "scope_values": [
+        4430011
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    }
+  ],
+  "limitations": [
+    "DEFINITION ONLY at submission. Requires: QuickML similarity endpoint over si_case_embedding.",
+    "Registered so the intent catalogue is complete and the interface is fixed; returns an honest E_SERVICE_UNAVAILABLE rather than fabricated data."
+  ]
+}
