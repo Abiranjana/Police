@@ -55,7 +55,14 @@ DEMO_IDENTITIES = {
 
 def get_demo_identity():
     role = os.getenv("SCRB_DEMO_ROLE", "SI").upper()
-    return DEMO_IDENTITIES.get(role, DEMO_IDENTITIES["SI"])
+    identity = DEMO_IDENTITIES.get(role, DEMO_IDENTITIES["SI"])
+
+    # Return a per-request copy so mutations don't leak across requests/tests.
+    return {
+        **identity,
+        "unit_ids": list(identity.get("unit_ids", [])),
+        "district_ids": list(identity.get("district_ids", [])),
+    }
 
 
 def build_scope(identity):
