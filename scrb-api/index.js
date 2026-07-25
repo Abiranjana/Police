@@ -20,11 +20,23 @@ const USE_LIVE_DB = process.env.USE_LIVE_DB === "true" || false;
 
 const app = express();
 
-// NOTE: CORS is handled by Catalyst's platform whitelist (console →
-// Whitelisting → scrb-web-dijitaup.onslate.in, CORS enabled), NOT here.
-// The Zoho gateway injects Access-Control-Allow-Origin itself. If Express
-// also set that header, the browser would see two values and reject the
-// response ("contains multiple values"). So this app sets no CORS headers.
+// CORS: in production, Catalyst's console whitelist injects the
+// Access-Control-Allow-Origin header at the gateway — so this app must NOT
+// also send it there, or the browser sees two values and rejects it.
+// But local dev (localhost:5173 → localhost:9000) has no gateway, so nothing
+// adds the header and the browser blocks the call. Fix: send the header
+// ONLY for localhost origins. Production requests (from the onslate.in
+// domain) are untouched and keep relying on the Catalyst whitelist.
+app.use((req, res, next) => {
+  const origin = req.headers.origin || "";
+  if (/^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    if (req.method === "OPTIONS") return res.status(204).end();
+  }
+  next();
+});
 
 app.use(express.json());
 

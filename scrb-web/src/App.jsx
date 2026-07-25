@@ -16,33 +16,48 @@ const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:9000";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
-const EXAMPLES = [
-  { q: "chain snatchings in my station this year by day and hour", intent: "TREND_BY_TIME" },
-  { q: "monthly trend of chain snatching", intent: "TREND_BY_MONTH" },
-  { q: "weekly trend of chain snatching", intent: "TREND_BY_WEEK" },
-  { q: "which units have the most chain snatching", intent: "COUNT_BY_AREA" },
-  { q: "chain snatching by district", intent: "COUNT_BY_DISTRICT" },
-  { q: "top crime types this year", intent: "TOP_CRIME_TYPES" },
-  { q: "victim gender breakdown for chain snatching", intent: "VICTIM_BREAKDOWN" },
-  { q: "accused age groups for chain snatching", intent: "ACCUSED_BREAKDOWN" },
-  { q: "chargesheet rate for chain snatching", intent: "CHARGESHEET_RATE" },
-  { q: "conviction rate for chain snatching", intent: "CONVICTION_ANALYSIS" },
-  { q: "investigation delay for chain snatching", intent: "INVESTIGATION_DELAY" },
-  { q: "chain snatching hotspots", intent: "HOTSPOT_CURRENT" },
-  { q: "chain snatching this year vs last", intent: "TREND_COMPARE_PERIOD" },
-  { q: "seasonal pattern of chain snatching", intent: "SEASONAL_PATTERN" },
-  { q: "repeat accused for chain snatching", intent: "PERSON_CASE_HISTORY" },
-  { q: "habitual offenders for chain snatching", intent: "HABITUAL_OFFENDERS" },
-  { q: "map a criminal network (needs Module C)", intent: "NETWORK_AROUND_PERSON" },
-  { q: "forecast chain snatching (needs QuickML)", intent: "FORECAST_TREND" },
+const OFFENCES = [
+  { id: 12, en: "Chain snatching", kn: "ಸರಪಳಿ ಕಳವು" },
+  { id: 45, en: "House breaking", kn: "ಮನೆ ಕಳ್ಳತನ" },
+  { id: 78, en: "Vehicle theft", kn: "ವಾಹನ ಕಳವು" },
+  { id: 91, en: "Cheating", kn: "ವಂಚನೆ" },
 ];
+
+const EXAMPLES = [
+  { q: "chain snatchings this year by day and hour", intent: "TREND_BY_TIME" },
+  { q: "monthly trend of this offence", intent: "TREND_BY_MONTH" },
+  { q: "which units have the most of this", intent: "COUNT_BY_AREA" },
+  { q: "by district", intent: "COUNT_BY_DISTRICT" },
+  { q: "top crime types this year", intent: "TOP_CRIME_TYPES" },
+  { q: "victim gender breakdown", intent: "VICTIM_BREAKDOWN" },
+  { q: "accused age groups", intent: "ACCUSED_BREAKDOWN" },
+  { q: "chargesheet rate", intent: "CHARGESHEET_RATE" },
+  { q: "conviction rate", intent: "CONVICTION_ANALYSIS" },
+  { q: "investigation delay", intent: "INVESTIGATION_DELAY" },
+  { q: "hotspots", intent: "HOTSPOT_CURRENT" },
+  { q: "this year vs last", intent: "TREND_COMPARE_PERIOD" },
+  { q: "seasonal pattern", intent: "SEASONAL_PATTERN" },
+  { q: "repeat accused", intent: "PERSON_CASE_HISTORY" },
+  { q: "habitual offenders", intent: "HABITUAL_OFFENDERS" },
+  { q: "trend (but I wont say which year)", intent: "TREND_BY_TIME", omitYear: true },
+  { q: "map a criminal network", intent: "NETWORK_AROUND_PERSON" },
+  { q: "forecast this offence", intent: "FORECAST_TREND" },
+];
+
+// UI copy, English + Kannada. Interface language toggles independently of
+// what the router understands. Real Kannada understanding needs P4 router;
+// the whole voice/language shell is here and plugs in when it lands.
+const T = {
+  en: { ask: "Ask", placeholder: "Ask a question...", offence: "Offence", listening: "Listening...", speak: "Speak answer", stop: "Stop", produced: "How this answer was produced", need: "Need one more detail", lang: "\u0c95\u0ca8\u0ccd\u0ca8\u0ca1" },
+  kn: { ask: "ಕೇಳಿ", placeholder: "ಪ್ರಶ್ನೆ ಕೇಳಿ...", offence: "ಅಪರಾಧ", listening: "ಆಲಿಸುತ್ತಿದೆ...", speak: "ಉತ್ತರ ಓದಿ", stop: "ನಿಲ್ಲಿಸಿ", produced: "ಈ ಉತ್ತರ ಹೇಗೆ ರಚಿಸಲಾಗಿದೆ", need: "ಇನ್ನೊಂದು ವಿವರ ಬೇಕು", lang: "English" },
+};
 
 /* Canned Contract 2 payload, standing in for fn-intent-router (P4/M9).
    Picks the intent from the chosen example; entities stay fixed for the
    demo. Swap for a real router call when M9 exists. */
-function buildContract2(intent) {
+function buildContract2(intent, offenceId, omitYear) {
   const base = {
-    crime_subhead_id: { value: 12, type: "INT", is_list: false, source: "STATED" },
+    crime_subhead_id: { value: offenceId, type: "INT", is_list: false, source: "STATED" },
     crime_head_id: null,
     unit_id: { value: 4430006, type: "INT", is_list: false, source: "INHERITED_FROM_SESSION" },
     district_id: null, case_master_id: null, person_id: null, community_id: null, case_category_id: null,
@@ -51,10 +66,9 @@ function buildContract2(intent) {
     group_by: { value: "DAY_AND_HOUR", type: "ENUM", is_list: false, source: "STATED" },
     dimension: null,
   };
-  // intents that rank across all offences carry no specific sub-head
   if (intent === "TOP_CRIME_TYPES" || intent === "COUNT_BY_CRIME_TYPE") base.crime_subhead_id = null;
-  // compare-period spans years, so it carries no single year
   if (intent === "TREND_COMPARE_PERIOD") base.year_num = null;
+  if (omitYear) base.year_num = null; // deliberately trigger CLARIFICATION_NEEDED
   return { intent, confidence: 0.94, is_followup: false, entities: base };
 }
 
@@ -202,7 +216,7 @@ function Field({ n, label, children, mono, wide }) {
   );
 }
 
-function AnswerView({ result }) {
+function AnswerView({ result, lang, t }) {
   const { answer: ans, evidence: ev, outcome, turn_id, audit_id, error } = result;
 
   if (outcome === "CLARIFICATION_NEEDED") {
@@ -231,11 +245,7 @@ function AnswerView({ result }) {
 
   return (
     <>
-      <header className="masthead">
-        <div className="masthead__id">
-          <span className="masthead__mark">SCRB</span>
-          <span className="masthead__sub">Insight</span>
-        </div>
+      <header className="masthead masthead--slim">
         <dl className="masthead__meta">
           <div><dt>Turn</dt><dd>{turn_id}</dd></div>
           <div><dt>Audit</dt><dd>{audit_id}</dd></div>
@@ -363,14 +373,19 @@ function AnswerView({ result }) {
 }
 
 export default function App() {
-  const [question, setQuestion] = useState("chain snatchings in my station this year by day and hour");
+  const [question, setQuestion] = useState("chain snatchings this year by day and hour");
   const [intent, setIntent] = useState("TREND_BY_TIME");
+  const [offence, setOffence] = useState(12);
+  const [lang, setLang] = useState("en");
+  const [listening, setListening] = useState(false);
   const [stage, setStage] = useState(null);
   const [result, setResult] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const pollRef = useRef(null);
+  const recogRef = useRef(null);
+  const t = T[lang];
 
-  async function ask(useIntent = intent) {
+  async function ask(useIntent = intent, omitYear = false) {
     setResult(null);
     setErrorMsg(null);
     setStage("QUEUED");
@@ -380,7 +395,7 @@ export default function App() {
       const res = await fetch(`${API_BASE}/conversations/c1/turns`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, as_unit_id: 4430006, contract2: buildContract2(useIntent) }),
+        body: JSON.stringify({ question, as_unit_id: 4430006, contract2: buildContract2(useIntent, offence, omitYear) }),
       });
       if (!res.ok) throw new Error(`submit failed: ${res.status}`);
       const { turn_id } = await res.json();
@@ -403,29 +418,101 @@ export default function App() {
   function pickExample(ex) {
     setQuestion(ex.q);
     setIntent(ex.intent);
-    ask(ex.intent);
+    ask(ex.intent, !!ex.omitYear);
+  }
+
+  // ── Voice input via the browser Web Speech API. Recognises English or
+  // Kannada depending on the language toggle. No backend needed. When P4's
+  // router understands Kannada, the transcript already flows through the
+  // same ask() path — only the fake buildContract2 gets replaced.
+  function toggleVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      setErrorMsg("This browser doesn't support voice input. Try Chrome.");
+      return;
+    }
+    if (listening) {
+      recogRef.current?.stop();
+      return;
+    }
+    const r = new SR();
+    r.lang = lang === "kn" ? "kn-IN" : "en-IN";
+    r.interimResults = false;
+    r.maxAlternatives = 1;
+    r.onstart = () => setListening(true);
+    r.onend = () => setListening(false);
+    r.onerror = () => setListening(false);
+    r.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      setQuestion(text);
+      // Demo router stand-in: keep the currently selected intent, since the
+      // real intent classification is P4's job. The transcript is real.
+      ask(intent, false);
+    };
+    recogRef.current = r;
+    r.start();
+  }
+
+  // ── Text-to-speech: read the answer summary aloud in the chosen language.
+  function speakAnswer() {
+    if (!result?.answer?.summary) return;
+    const u = new SpeechSynthesisUtterance(result.answer.summary);
+    u.lang = lang === "kn" ? "kn-IN" : "en-IN";
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
   }
 
   const busy = stage && stage !== "DONE" && stage !== "FAILED";
 
   return (
     <div className="page">
+      <div className="topbar">
+        <div className="topbar__brand">
+          <span className="topbar__mark">SCRB</span>
+          <span className="topbar__sub">Insight</span>
+          <span className="topbar__tag">Conversational crime analytics</span>
+        </div>
+        <div className="topbar__controls">
+          <div className="seg">
+            <span className="seg__label">{t.offence}</span>
+            <select className="seg__select" value={offence} onChange={(e) => setOffence(Number(e.target.value))} disabled={busy}>
+              {OFFENCES.map((o) => (
+                <option key={o.id} value={o.id}>{lang === "kn" ? o.kn : o.en}</option>
+              ))}
+            </select>
+          </div>
+          <button className="lang-toggle" onClick={() => setLang(lang === "en" ? "kn" : "en")}>
+            {lang === "en" ? "ಕನ್ನಡ" : "English"}
+          </button>
+        </div>
+      </div>
+
       <div className="composer">
         <input
           className="composer__input"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && ask()}
-          placeholder="Ask a question…"
+          placeholder={t.placeholder}
         />
-        <button className="composer__btn" onClick={() => ask()} disabled={busy}>Ask</button>
+        <button
+          className={"mic" + (listening ? " is-live" : "")}
+          onClick={toggleVoice}
+          title={listening ? t.listening : "Voice"}
+          disabled={busy && !listening}
+        >
+          {listening ? "●" : "🎤"}
+        </button>
+        <button className="composer__btn" onClick={() => ask()} disabled={busy}>{t.ask}</button>
       </div>
 
+      {listening && <p className="progress"><span className="progress__dot" />{t.listening}</p>}
+
       <div className="examples">
-        {EXAMPLES.map((ex) => (
+        {EXAMPLES.map((ex, i) => (
           <button
-            key={ex.intent}
-            className={"examples__chip" + (ex.intent === intent ? " is-active" : "")}
+            key={i}
+            className={"examples__chip" + (ex.intent === intent && !ex.omitYear ? " is-active" : "") + (ex.omitYear ? " is-special" : "")}
             onClick={() => pickExample(ex)}
             disabled={busy}
           >
@@ -440,7 +527,14 @@ export default function App() {
 
       {errorMsg && <div className="notice notice--error">{errorMsg}</div>}
 
-      {result && <AnswerView result={result} />}
+      {result && (
+        <>
+          {result.answer?.summary && (
+            <button className="speak-btn" onClick={speakAnswer}>🔊 {t.speak}</button>
+          )}
+          <AnswerView result={result} lang={lang} t={t} />
+        </>
+      )}
     </div>
   );
 }
