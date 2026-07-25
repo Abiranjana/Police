@@ -107,7 +107,7 @@ def evaluate_permission(identity, intent):
             "intent": intent,
             "scope_rule": "NONE",
             "scope_predicate": None,
-            "field_policy": "SUPPRESSED",
+            "field_policy": identity["field_policy"],
             "min_cell_size": identity["min_cell_size"],
             "max_rows": 0,
             "reason_code": "ADMIN_HAS_NO_CRIME_DATA_ACCESS",
