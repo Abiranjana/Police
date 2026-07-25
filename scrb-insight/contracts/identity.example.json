@@ -1,0 +1,8 @@
+{
+  "user_id": "demo-si",
+  "role": "SI",
+  "unit_ids": [4430006],
+  "district_ids": [443],
+  "field_policy": "FULL",
+  "min_cell_size": 1
+}
