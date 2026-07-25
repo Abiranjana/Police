@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "scrb-insight/contract-2-understanding/v1.0.0",
+  "title": "Contract 2 — UNDERSTANDING (P4 to P2)",
+  "description": "Output of fn-intent-router. P2's builder (M6) accepts this shape from a hand-written fixture, from curl, or from the live router — all three are interchangeable so every template is testable before the model exists. Changes go through a version bump, never a rename; entities are added, never renamed or removed. Finalised 2026-07-24 from P4's reply.",
+  "type": "object",
+  "required": ["intent", "confidence", "is_followup", "entities"],
+  "additionalProperties": false,
+  "properties": {
+    "intent": {
+      "type": "string",
+      "description": "One of the 28 catalogued intents (§8), or UNSUPPORTED when confidence < 0.80 or the question does not fit the catalogue.",
+      "enum": [
+        "TREND_BY_TIME", "TREND_COMPARE_PERIOD",
+        "COUNT_BY_AREA", "COUNT_BY_CRIME_TYPE",
+        "VICTIM_BREAKDOWN", "ACCUSED_BREAKDOWN",
+        "NETWORK_AROUND_PERSON", "COMMUNITY_DETAIL", "BRIDGE_PERSONS", "NETWORK_EVOLUTION",
+        "PERSON_CASE_HISTORY", "HABITUAL_OFFENDERS", "BEHAVIOUR_PROFILE",
+        "CHARGESHEET_RATE", "CONVICTION_ANALYSIS", "INVESTIGATION_DELAY",
+        "HOTSPOT_CURRENT", "HOTSPOT_EMERGING",
+        "SEASONAL_PATTERN", "EVENT_IMPACT",
+        "SOCIO_CORRELATION", "RISK_FACTORS",
+        "FORECAST_TREND", "FORECAST_HOTSPOT",
+        "SIMILAR_CASES", "LEAD_SUGGESTION",
+        "MONEY_TRAIL", "FINANCIAL_LINKS",
+        "UNSUPPORTED"
+      ]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "is_followup": { "type": "boolean" },
+    "suggested_intents": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Populated only when intent is UNSUPPORTED. Nearest catalogue matches, surfaced to the user as 'did you mean'."
+    },
+    "entities": {
+      "type": "object",
+      "description": "Every slot in the dictionary is always a key. Present slots are an object with value/type/is_list/source. Absent or unresolved slots are bare null — never an omitted key, never {value: null}. M6 checks presence with entities.<slot> === null.",
+      "additionalProperties": false,
+      "properties": {
+        "crime_subhead_id": { "$ref": "#/$defs/entity_int_list" },
+        "crime_head_id": { "$ref": "#/$defs/entity_int_list" },
+        "unit_id": { "$ref": "#/$defs/entity_int_list" },
+        "district_id": { "$ref": "#/$defs/entity_int_list" },
+        "case_master_id": { "$ref": "#/$defs/entity_int_single" },
+        "person_id": { "$ref": "#/$defs/entity_bigint_single" },
+        "community_id": { "$ref": "#/$defs/entity_bigint_single" },
+        "case_category_id": { "$ref": "#/$defs/entity_int_single" },
+        "year_num": { "$ref": "#/$defs/entity_int_single" },
+        "year_month": { "$ref": "#/$defs/entity_int_single" },
+        "date_from": { "$ref": "#/$defs/entity_string_single" },
+        "date_to": { "$ref": "#/$defs/entity_string_single" },
+        "group_by": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["value", "type", "is_list", "source"],
+              "additionalProperties": false,
+              "properties": {
+                "value": { "type": "string", "enum": ["DAY", "WEEK", "MONTH", "DAY_AND_HOUR", "YEAR"] },
+                "type": { "const": "ENUM" },
+                "is_list": { "const": false },
+                "source": { "$ref": "#/$defs/source_enum" }
+              }
+            }
+          ]
+        },
+        "dimension": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["value", "type", "is_list", "source"],
+              "additionalProperties": false,
+              "properties": {
+                "value": { "type": "string", "enum": ["AGE_BAND", "GENDER", "UNIT", "DISTRICT", "CRIME_HEAD"] },
+                "type": { "const": "ENUM" },
+                "is_list": { "const": false },
+                "source": { "$ref": "#/$defs/source_enum" }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "source_enum": {
+      "type": "string",
+      "enum": ["STATED", "INHERITED_FROM_SESSION", "INHERITED_FROM_TURN", "DERIVED", "DEFAULTED"]
+    },
+    "entity_int_list": {
+      "description": "crime_subhead_id / crime_head_id / unit_id / district_id — is_list: true is allowed, a single value need not be wrapped in an array.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["value", "type", "is_list", "source"],
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "oneOf": [
+                { "type": "integer" },
+                { "type": "array", "items": { "type": "integer" }, "minItems": 1 }
+              ]
+            },
+            "type": { "const": "INT" },
+            "is_list": { "type": "boolean" },
+            "source": { "$ref": "#/$defs/source_enum" }
+          }
+        }
+      ]
+    },
+    "entity_int_single": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["value", "type", "is_list", "source"],
+          "additionalProperties": false,
+          "properties": {
+            "value": { "type": "integer" },
+            "type": { "const": "INT" },
+            "is_list": { "const": false },
+            "source": { "$ref": "#/$defs/source_enum" }
+          }
+        }
+      ]
+    },
+    "entity_bigint_single": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["value", "type", "is_list", "source"],
+          "additionalProperties": false,
+          "properties": {
+            "value": { "type": "integer" },
+            "type": { "const": "BIGINT" },
+            "is_list": { "const": false },
+            "source": { "$ref": "#/$defs/source_enum" }
+          }
+        }
+      ]
+    },
+    "entity_string_single": {
+      "description": "date_from / date_to. Deliberately no bare string or raw type anywhere in this contract — free text never reaches a query.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["value", "type", "is_list", "source"],
+          "additionalProperties": false,
+          "properties": {
+            "value": { "type": "string", "format": "date" },
+            "type": { "const": "STRING" },
+            "is_list": { "const": false },
+            "source": { "$ref": "#/$defs/source_enum" }
+          }
+        }
+      ]
+    }
+  }
+}

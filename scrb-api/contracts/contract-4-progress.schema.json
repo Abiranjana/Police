@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "scrb-insight/contract-4-progress/v1.0.0",
+  "title": "Contract 4 — PROGRESS (P2 to P5)",
+  "description": "Response body of GET /turns/{turn_id}/status. Catalyst does not support long-lived streaming connections, so P5 polls this every 400ms. The stage sequence is also the explainability trace, so it is materialised in Cache rather than merely logged.",
+  "type": "object",
+  "required": ["turn_id", "stage", "stages_completed", "elapsed_ms"],
+  "additionalProperties": false,
+  "properties": {
+    "turn_id": { "type": "string" },
+    "stage": {
+      "type": "string",
+      "enum": ["QUEUED", "UNDERSTANDING", "PERMISSION", "TEMPLATE_SELECT", "QUERYING", "ANALYSING", "EXPLAINING", "AUDITING", "DONE", "FAILED"],
+      "description": "Current stage. Terminal states are DONE and FAILED; on either, P5 stops polling and calls GET /turns/{turn_id}."
+    },
+    "stages_completed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stage", "ms"],
+        "properties": {
+          "stage": { "type": "string" },
+          "ms": { "type": "number" },
+          "note": { "type": ["string", "null"], "description": "Optional one-liner, e.g. 'scope narrowed to own unit' or 'page 2 of 3'." }
+        }
+      }
+    },
+    "elapsed_ms": { "type": "number" },
+    "poll_after_ms": {
+      "type": "integer",
+      "default": 400,
+      "description": "Server-suggested next poll delay. Lets the backend back off under load without a frontend change."
+    },
+    "terminal": { "type": "boolean", "description": "True when stage is DONE or FAILED. Present so P5 never has to hardcode the enum." }
+  }
+}

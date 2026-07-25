@@ -1,0 +1,112 @@
+{
+  "id": "TPL_PERSON_CASE_HISTORY",
+  "version": "1.0.0",
+  "intent": "PERSON_CASE_HISTORY",
+  "tier": "A",
+  "deprecated": false,
+  "author": "P2",
+  "reviewer": "P1",
+  "reviewed": "2026-07-25",
+  "purpose": "Case count per accused person for a sub-head in a year within jurisdiction (repeat involvement).",
+  "tables_declared": [
+    "si_case_fact"
+  ],
+  "params": {
+    "crime_subhead_id": {
+      "type": "int",
+      "required": true,
+      "min": 1,
+      "max": 9999,
+      "description": "Specific offence sub-head."
+    },
+    "year_num": {
+      "type": "year",
+      "required": true,
+      "min": 2019,
+      "max": 2026,
+      "description": "Single year, from IncidentFromDate."
+    }
+  },
+  "scope": {
+    "column": "unit_id",
+    "conditions_consumed": 1,
+    "exempt": false
+  },
+  "where_budget": {
+    "template_conditions": 2,
+    "ceiling": 5
+  },
+  "body": "SELECT accused_person_id, COUNT(case_id) FROM si_case_fact WHERE crime_subhead_id = {{crime_subhead_id}} AND year_num = {{year_num}} AND {{SCOPE_PREDICATE}} GROUP BY accused_person_id ORDER BY COUNT(case_id) DESC",
+  "execute_on": "OLAP",
+  "result": {
+    "columns": [
+      {
+        "name": "accused_person_id",
+        "source_key": "accused_person_id",
+        "type": "string"
+      },
+      {
+        "name": "count",
+        "source_key": "COUNT(case_id)",
+        "type": "int"
+      }
+    ],
+    "max_rows": 50,
+    "paginate": true,
+    "visual_type": "BAR_CATEGORY",
+    "min_cell_size_applies": true
+  },
+  "fixtures": [
+    {
+      "name": "person history chain snatching",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006,
+        4430007,
+        4430011
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 50,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "single",
+      "params": {
+        "crime_subhead_id": 45,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 50,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "empty",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2019
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    }
+  ],
+  "limitations": [
+    "Counts registered accusations, NOT convictions. Being named as accused is not guilt; this view must never be presented as a guilt ranking.",
+    "Person identity resolution is Module C's job; here accused_person_id is a raw seed id, not a resolved cross-case identity."
+  ]
+}

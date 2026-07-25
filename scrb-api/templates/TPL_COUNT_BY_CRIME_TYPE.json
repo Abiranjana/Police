@@ -1,0 +1,100 @@
+{
+  "id": "TPL_COUNT_BY_CRIME_TYPE",
+  "version": "1.0.0",
+  "intent": "COUNT_BY_CRIME_TYPE",
+  "tier": "A",
+  "deprecated": false,
+  "author": "P2",
+  "reviewer": "P1",
+  "reviewed": "2026-07-25",
+  "purpose": "Count cases per crime sub-head in a year within jurisdiction (volume by type).",
+  "tables_declared": [
+    "si_case_fact"
+  ],
+  "params": {
+    "year_num": {
+      "type": "year",
+      "required": true,
+      "min": 2019,
+      "max": 2026,
+      "description": "Single year, from IncidentFromDate."
+    }
+  },
+  "scope": {
+    "column": "unit_id",
+    "conditions_consumed": 1,
+    "exempt": false
+  },
+  "where_budget": {
+    "template_conditions": 1,
+    "ceiling": 5
+  },
+  "body": "SELECT crime_subhead_id, COUNT(case_id) FROM si_case_fact WHERE year_num = {{year_num}} AND {{SCOPE_PREDICATE}} GROUP BY crime_subhead_id ORDER BY COUNT(case_id) DESC",
+  "execute_on": "OLAP",
+  "result": {
+    "columns": [
+      {
+        "name": "crime_subhead_id",
+        "source_key": "crime_subhead_id",
+        "type": "int"
+      },
+      {
+        "name": "count",
+        "source_key": "COUNT(case_id)",
+        "type": "int"
+      }
+    ],
+    "max_rows": 50,
+    "paginate": false,
+    "visual_type": "BAR_CATEGORY",
+    "min_cell_size_applies": true
+  },
+  "fixtures": [
+    {
+      "name": "types 2024",
+      "params": {
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 50,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "types 2025",
+      "params": {
+        "year_num": 2025
+      },
+      "scope_values": [
+        4430006,
+        4430007
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 50,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "empty",
+      "params": {
+        "year_num": 2019
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    }
+  ],
+  "limitations": [
+    "Volume view; a common-but-minor offence outranks rare-but-serious ones."
+  ]
+}

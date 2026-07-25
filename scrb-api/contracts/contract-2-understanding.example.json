@@ -1,0 +1,51 @@
+[
+  {
+    "name": "TREND_BY_TIME — chain snatching, day×hour, inherited unit",
+    "payload": {
+      "intent": "TREND_BY_TIME",
+      "confidence": 0.94,
+      "is_followup": false,
+      "entities": {
+        "crime_subhead_id": { "value": 102, "type": "INT", "is_list": false, "source": "STATED" },
+        "crime_head_id": null,
+        "unit_id": { "value": 4430006, "type": "INT", "is_list": false, "source": "INHERITED_FROM_SESSION" },
+        "district_id": null,
+        "case_master_id": null,
+        "person_id": null,
+        "community_id": null,
+        "case_category_id": null,
+        "year_num": { "value": 2026, "type": "INT", "is_list": false, "source": "DERIVED" },
+        "year_month": null,
+        "date_from": null,
+        "date_to": null,
+        "group_by": { "value": "DAY_AND_HOUR", "type": "ENUM", "is_list": false, "source": "STATED" },
+        "dimension": null
+      }
+    }
+  },
+  {
+    "name": "UNSUPPORTED — below confidence threshold, nearest matches suggested",
+    "payload": {
+      "intent": "UNSUPPORTED",
+      "confidence": 0.42,
+      "is_followup": false,
+      "suggested_intents": ["TREND_BY_TIME", "COUNT_BY_AREA"],
+      "entities": {
+        "crime_subhead_id": null,
+        "crime_head_id": null,
+        "unit_id": null,
+        "district_id": null,
+        "case_master_id": null,
+        "person_id": null,
+        "community_id": null,
+        "case_category_id": null,
+        "year_num": null,
+        "year_month": null,
+        "date_from": null,
+        "date_to": null,
+        "group_by": null,
+        "dimension": null
+      }
+    }
+  }
+]

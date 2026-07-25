@@ -1,0 +1,14 @@
+{
+  "appsail": [
+    {
+      "source": "./scrb-api",
+      "name": "scrb-api"
+    }
+  ],
+  "slate": [
+    {
+      "name": "scrb-web",
+      "source": "D:\\scrb-insight\\scrb-web"
+    }
+  ]
+}

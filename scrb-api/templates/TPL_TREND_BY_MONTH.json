@@ -1,0 +1,110 @@
+{
+  "id": "TPL_TREND_BY_MONTH",
+  "version": "1.0.0",
+  "intent": "TREND_BY_MONTH",
+  "tier": "A",
+  "deprecated": false,
+  "author": "P2",
+  "reviewer": "P1",
+  "reviewed": "2026-07-25",
+  "purpose": "Monthly case counts for one crime sub-head across one year, within jurisdiction \u2014 a time series.",
+  "tables_declared": [
+    "si_case_fact"
+  ],
+  "params": {
+    "crime_subhead_id": {
+      "type": "int",
+      "required": true,
+      "min": 1,
+      "max": 9999,
+      "description": "The specific offence."
+    },
+    "year_num": {
+      "type": "year",
+      "required": true,
+      "min": 2019,
+      "max": 2026,
+      "description": "Single year, from IncidentFromDate."
+    }
+  },
+  "scope": {
+    "column": "unit_id",
+    "conditions_consumed": 1,
+    "exempt": false
+  },
+  "where_budget": {
+    "template_conditions": 2,
+    "ceiling": 5
+  },
+  "body": "SELECT year_month, COUNT(case_id) FROM si_case_fact WHERE crime_subhead_id = {{crime_subhead_id}} AND year_num = {{year_num}} AND {{SCOPE_PREDICATE}} GROUP BY year_month ORDER BY year_month",
+  "execute_on": "OLAP",
+  "result": {
+    "columns": [
+      {
+        "name": "year_month",
+        "source_key": "year_month",
+        "type": "int"
+      },
+      {
+        "name": "count",
+        "source_key": "COUNT(case_id)",
+        "type": "int"
+      }
+    ],
+    "max_rows": 12,
+    "paginate": false,
+    "visual_type": "LINE_TIME",
+    "min_cell_size_applies": false
+  },
+  "fixtures": [
+    {
+      "name": "chain snatching monthly 2024",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 12,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "other subhead",
+      "params": {
+        "crime_subhead_id": 78,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006,
+        4430007
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 12,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "edge \u2014 empty",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2019
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    }
+  ],
+  "limitations": [
+    "Monthly buckets from IncidentFromDate. A partial current month reads as a dip; note it when relevant."
+  ]
+}

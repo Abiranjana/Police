@@ -1,0 +1,110 @@
+{
+  "id": "TPL_TREND_BY_WEEK",
+  "version": "1.0.0",
+  "intent": "TREND_BY_WEEK",
+  "tier": "A",
+  "deprecated": false,
+  "author": "P2",
+  "reviewer": "P1",
+  "reviewed": "2026-07-25",
+  "purpose": "Weekly case counts for one crime sub-head across a year, within jurisdiction.",
+  "tables_declared": [
+    "si_case_fact"
+  ],
+  "params": {
+    "crime_subhead_id": {
+      "type": "int",
+      "required": true,
+      "min": 1,
+      "max": 9999,
+      "description": "Specific offence."
+    },
+    "year_num": {
+      "type": "year",
+      "required": true,
+      "min": 2019,
+      "max": 2026,
+      "description": "Single year."
+    }
+  },
+  "scope": {
+    "column": "unit_id",
+    "conditions_consumed": 1,
+    "exempt": false
+  },
+  "where_budget": {
+    "template_conditions": 2,
+    "ceiling": 5
+  },
+  "body": "SELECT week_of_year, COUNT(case_id) FROM si_case_fact WHERE crime_subhead_id = {{crime_subhead_id}} AND year_num = {{year_num}} AND {{SCOPE_PREDICATE}} GROUP BY week_of_year ORDER BY week_of_year",
+  "execute_on": "OLAP",
+  "result": {
+    "columns": [
+      {
+        "name": "week_of_year",
+        "source_key": "week_of_year",
+        "type": "int"
+      },
+      {
+        "name": "count",
+        "source_key": "COUNT(case_id)",
+        "type": "int"
+      }
+    ],
+    "max_rows": 53,
+    "paginate": false,
+    "visual_type": "LINE_TIME",
+    "min_cell_size_applies": false
+  },
+  "fixtures": [
+    {
+      "name": "weekly chain snatching",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 53,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "multi unit",
+      "params": {
+        "crime_subhead_id": 78,
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006,
+        4430007
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 53,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "edge empty",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2019
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    }
+  ],
+  "limitations": [
+    "Weekly buckets from IncidentFromDate. Partial first/last weeks read low."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "turn_id": "trn_01J9K4M2QX7B",
+  "stage": "EXPLAINING",
+  "stages_completed": [
+    { "stage": "QUEUED", "ms": 3, "note": null },
+    { "stage": "UNDERSTANDING", "ms": 610, "note": "TREND_BY_TIME, confidence 0.94" },
+    { "stage": "PERMISSION", "ms": 4, "note": "SI / OWN_UNIT, not narrowed" },
+    { "stage": "TEMPLATE_SELECT", "ms": 2, "note": "TPL_TREND_TIME_DAYHOUR v1.0.0" },
+    { "stage": "QUERYING", "ms": 380, "note": "OLAP, 168 rows, 1 page" },
+    { "stage": "ANALYSING", "ms": 55, "note": null }
+  ],
+  "elapsed_ms": 1054,
+  "poll_after_ms": 400,
+  "terminal": false
+}

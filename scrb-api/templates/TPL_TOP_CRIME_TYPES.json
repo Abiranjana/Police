@@ -1,0 +1,101 @@
+{
+  "id": "TPL_TOP_CRIME_TYPES",
+  "version": "1.0.0",
+  "intent": "TOP_CRIME_TYPES",
+  "tier": "A",
+  "deprecated": false,
+  "author": "P2",
+  "reviewer": "P1",
+  "reviewed": "2026-07-25",
+  "purpose": "Rank crime sub-heads by case count in one year within jurisdiction \u2014 what offences dominate.",
+  "tables_declared": [
+    "si_case_fact"
+  ],
+  "params": {
+    "year_num": {
+      "type": "year",
+      "required": true,
+      "min": 2019,
+      "max": 2026,
+      "description": "Single year, from IncidentFromDate."
+    }
+  },
+  "scope": {
+    "column": "unit_id",
+    "conditions_consumed": 1,
+    "exempt": false
+  },
+  "where_budget": {
+    "template_conditions": 1,
+    "ceiling": 5
+  },
+  "body": "SELECT crime_subhead_id, COUNT(case_id) FROM si_case_fact WHERE year_num = {{year_num}} AND {{SCOPE_PREDICATE}} GROUP BY crime_subhead_id ORDER BY COUNT(case_id) DESC",
+  "execute_on": "OLAP",
+  "result": {
+    "columns": [
+      {
+        "name": "crime_subhead_id",
+        "source_key": "crime_subhead_id",
+        "type": "int"
+      },
+      {
+        "name": "count",
+        "source_key": "COUNT(case_id)",
+        "type": "int"
+      }
+    ],
+    "max_rows": 50,
+    "paginate": false,
+    "visual_type": "BAR_CATEGORY",
+    "min_cell_size_applies": true
+  },
+  "fixtures": [
+    {
+      "name": "top types 2024, one unit",
+      "params": {
+        "year_num": 2024
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 50,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "top types 2025, multi unit",
+      "params": {
+        "year_num": 2025
+      },
+      "scope_values": [
+        4430006,
+        4430007,
+        4430011
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 50,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "edge \u2014 empty",
+      "params": {
+        "year_num": 2019
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    }
+  ],
+  "limitations": [
+    "Ranks by raw registered count. Rare-but-serious offences rank low; this is a volume view, not a severity view."
+  ]
+}

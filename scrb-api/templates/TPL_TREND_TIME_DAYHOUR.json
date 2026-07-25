@@ -1,0 +1,135 @@
+{
+  "id": "TPL_TREND_TIME_DAYHOUR",
+  "version": "1.0.0",
+  "intent": "TREND_BY_TIME",
+  "tier": "A",
+  "deprecated": false,
+  "author": "P2",
+  "reviewer": "P1",
+  "reviewed": "2026-07-24",
+  "purpose": "Count registered cases of one crime SUB-HEAD (the specific offence, e.g. chain snatching) in one year, broken down by day of week and hour of day, within the caller's jurisdiction.",
+  "tables_declared": [
+    "si_case_fact"
+  ],
+  "params": {
+    "crime_subhead_id": {
+      "type": "int",
+      "required": true,
+      "min": 1,
+      "max": 9999,
+      "description": "CrimeSubHead.CrimeSubHeadID — the specific offence. NOT the major head. Filtering on the major head returns an entire crime group. Validated against the reference table; an unknown code returns E_ENTITY_INVALID rather than an empty chart."
+    },
+    "year_num": {
+      "type": "year",
+      "required": true,
+      "min": 2019,
+      "max": 2026,
+      "description": "Single year, derived from IncidentFromDate. Deliberately not a from/to range: ZCQL BETWEEN does not accept dates, so a range costs two of the five WHERE conditions and this template cannot afford them."
+    }
+  },
+  "scope": {
+    "column": "unit_id",
+    "conditions_consumed": 1,
+    "exempt": false
+  },
+  "where_budget": {
+    "template_conditions": 2,
+    "ceiling": 5
+  },
+  "body": "SELECT day_of_week, hour_of_day, COUNT(case_id) FROM si_case_fact WHERE crime_subhead_id = {{crime_subhead_id}} AND year_num = {{year_num}} AND {{SCOPE_PREDICATE}} GROUP BY day_of_week, hour_of_day ORDER BY day_of_week, hour_of_day",
+  "execute_on": "OLAP",
+  "result": {
+    "columns": [
+      {
+        "name": "day_of_week",
+        "source_key": "day_of_week",
+        "type": "int"
+      },
+      {
+        "name": "hour_of_day",
+        "source_key": "hour_of_day",
+        "type": "int"
+      },
+      {
+        "name": "count",
+        "source_key": "COUNT(case_id)",
+        "type": "int"
+      }
+    ],
+    "max_rows": 168,
+    "paginate": false,
+    "visual_type": "HEATMAP_DAY_HOUR",
+    "min_cell_size_applies": true
+  },
+  "fixtures": [
+    {
+      "name": "the embedded pattern — chain snatching (sub-head), Bengaluru North, 2025",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2025
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 20,
+        "max_rows": 168,
+        "must_not_error": true,
+        "assertion": "peak cell falls on day_of_week 5 or 6 with hour_of_day between 19 and 22, and is at least 3x the median non-zero cell"
+      }
+    },
+    {
+      "name": "different sub-head, same unit — should be flat",
+      "params": {
+        "crime_subhead_id": 45,
+        "year_num": 2025
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 168,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "edge case — year with no data returns empty, not an error",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2019
+      },
+      "scope_values": [
+        4430006
+      ],
+      "expect": {
+        "min_rows": 0,
+        "max_rows": 0,
+        "must_not_error": true
+      }
+    },
+    {
+      "name": "edge case — widest permitted scope list, checks the IN-length limit",
+      "params": {
+        "crime_subhead_id": 12,
+        "year_num": 2025
+      },
+      "scope_values": [
+        4430006,
+        4430007,
+        4430011
+      ],
+      "expect": {
+        "min_rows": 1,
+        "max_rows": 168,
+        "must_not_error": true
+      }
+    }
+  ],
+  "limitations": [
+    "day_of_week and hour_of_day are derived from IncidentFromDate (when the offence occurred), NOT CrimeRegisteredDate (when the FIR was filed). Built on the registration date this chart would show station opening hours and present them as a crime pattern.",
+    "Counts registered cases. A rise may reflect a change in reporting rather than a change in offending, and the reasoning text must say so.",
+    "Cases with a null IncidentFromDate are excluded per P1's declared rule and do not appear as a separate bucket. The excluded count should be surfaced when it is material.",
+    "Derived columns are computed at generation time. If a case's incident timestamp is later corrected, they must be recomputed or this chart silently disagrees with the raw record."
+  ]
+}
